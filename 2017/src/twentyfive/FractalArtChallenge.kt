@@ -5,8 +5,10 @@ import gridList.*
 class FractalArtChallenge {
     fun pixelAmount(input: List<String>, iterationAmount: Int = 5): Int {
         val rules = getRules(input)
-        var grid = ruleToGrid(".#./..#/###")
-        return 0
+        val initialGrid: GridList<Boolean> = ruleToGrid(".#./..#/###")
+
+        val grid = (1..iterationAmount).fold(initialGrid, { g, _ -> step(g, rules) })
+        return grid.values.count { it }
     }
 
     private fun getRules(input: List<String>): Map<String, String> =
@@ -17,13 +19,6 @@ class FractalArtChallenge {
 
     private fun step(grid: GridList<Boolean>, rules: Map<String, String>): GridList<Boolean> {
         val size = if (grid.width % 2 == 0) 2 else 3
-        // val converted = grid.splitToSubGrids(size, size).map { convert(it, rules) }
-        // return gridOf(converted)
-        return grid
-    }
-
-    private fun convert(grid: GridList<Boolean>, rules: Map<String, String>): GridList<Boolean> {
-        val size = if (grid.width % 2 == 0) 2 else 3
         val subGrids = grid.splitToSubGrids(size, size)
         val convertedSubGrids = subGrids.map { g ->
             val ruleKey = rules.keys.first { belongsToGroup(g, it) }
@@ -32,12 +27,11 @@ class FractalArtChallenge {
         return joinGrids(convertedSubGrids)
     }
 
-    private fun belongsToGroup(grid: GridList<Boolean>, rule: String): Boolean {
+    fun belongsToGroup(grid: GridList<Boolean>, rule: String): Boolean {
         val rotatedLeft = grid.rotateLeft()
         val flip = grid.reflectVertical()
         val flipRotatedLeft = flip.rotateLeft()
         val d4 = listOf(
-                // TODO: Is this all? Is this too much? Is this the group called D4?
                 grid, rotatedLeft, rotatedLeft.rotateLeft(), grid.rotateRight(),
                 flip, flipRotatedLeft, flipRotatedLeft.rotateLeft(), flip.rotateRight()
         )
@@ -49,7 +43,7 @@ class FractalArtChallenge {
                 .map { if (it) '#' else '.' }
                 .rows
                 .map { it.joinToString("") }
-                .joinToString("")
+                .joinToString("/")
         return stringRepresentation == rule
     }
 }
